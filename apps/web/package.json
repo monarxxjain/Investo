@@ -1,0 +1,53 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@aptos-labs/ts-sdk": "^1.29.1",
+    "@aptos-labs/wallet-adapter-ant-design": "^3.0.15",
+    "@aptos-labs/wallet-adapter-react": "^3.7.1",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^5.15.14",
+    "@mui/joy": "5.0.0-beta.32",
+    "@mui/lab": "5.0.0-alpha.170",
+    "@mui/material": "^5.15.14",
+    "@mui/x-data-grid": "^7.1.1",
+    "@mui/x-date-pickers": "^7.1.1",
+    "@supabase/supabase-js": "^2.42.0",
+    "axios": "^1.6.8",
+    "dayjs": "^1.11.10",
+    "ethers": "^6.11.1",
+    "form-data": "^4.0.0",
+    "framer-motion": "^11.0.24",
+    "next": "14.1.4",
+    "petra-plugin-wallet-adapter": "^0.4.5",
+    "react": "^18",
+    "react-cookie": "^7.1.4",
+    "react-dom": "^18",
+    "react-icons": "^5.0.1",
+    "react-tilt": "^1.0.2",
+    "sharp": "^0.33.3",
+    "swiper": "^11.0.7"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "^14.1.1",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/eslint": "^8.56.5",
+    "@types/node": "^20.11.24",
+    "@types/react": "^18.2.61",
+    "@types/react-dom": "^18.2.19",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8.57.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.3.3"
+  }
+}
