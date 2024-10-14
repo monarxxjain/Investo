@@ -7,28 +7,33 @@ import Image from "next/image";
 import MetaMaskWolf from "@/assets/icons/metamaskIcon.svg";
 import { styled } from "@mui/material/styles";
 import { useState } from "react";
-import TextField from '@mui/material/TextField';
+import TextField from "@mui/material/TextField";
 import InputFile from "@/components/atoms/InputFile";
 import { BACKEND_URL } from "@/content/values";
 import axios from "axios";
-import { useRouter } from 'next/navigation'
-import LoadingButton from '@mui/lab/LoadingButton';
+import { useRouter } from "next/navigation";
+import LoadingButton from "@mui/lab/LoadingButton";
 import { supabase } from "@/utils/supabase";
-import { initWallet } from "@/utils/etherInterface";
 import Link from "next/link";
 import { WalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useEffect } from "react";
+import { createInvestment } from "@/utils/aptosInterface/interface";
 
-const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView }) => {
-
-  const router = useRouter()
+const FormSignUp = ({
+  setIsSnackbarOpen,
+  userData,
+  setUserData,
+  view,
+  setView,
+}) => {
+  const router = useRouter();
   const sellerFormRef = useRef(null);
   const investorFormRef = useRef(null);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const [sellerPageNo, setSellerPageNo] = useState(1);
-  
+
   const ColorButton = styled(Button)(({ theme }) => ({
     color: theme.palette.getContrastText("#061c37"),
     backgroundColor: "#061c37",
@@ -46,9 +51,9 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
   const ColorIconButton = styled(IconButton)(({ theme }) => ({
     color: theme.palette.getContrastText("#061c37"),
     backgroundColor: "#061c37",
-    '&:hover': {
+    "&:hover": {
       backgroundColor: "#061c37",
-    }
+    },
   }));
 
   const handleSellerPageNo = (number) => {
@@ -59,24 +64,26 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
 
   const handler = async (e) => {
     e.preventDefault();
-    let field = e.target.name
-    let value = e.target.value
+    let field = e.target.name;
+    let value = e.target.value;
 
     if (field == "logo") {
-      value = e.target.files[0]
+      value = e.target.files[0];
       console.log("File ", value);
 
       const currentDate = new Date();
       const timestamp = currentDate.getTime(); // Get current timestamp
       const fileName = `${timestamp}_${value.name}`; // Append timestamp to the file name
-      console.log(fileName)
-      let { data, error } = await supabase.storage.from('invoice').upload('/logos/' + fileName, value);
+      console.log(fileName);
+      let { data, error } = await supabase.storage
+        .from("invoice")
+        .upload("/logos/" + fileName, value);
       if (error) {
         console.log("Supabase error ", error);
       } else {
         console.log("Supabase data ", data);
       }
-      value = data.path
+      value = data.path;
     }
 
     if (view == "DATA_INVESTOR") {
@@ -87,15 +94,14 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
           metaMaskId: e.target.value,
         },
       }));
-    }
-
-    else {
+    } else {
       setUserData((prev) => ({
-        ...prev, modelData: {
+        ...prev,
+        modelData: {
           ...prev.modelData,
-          [field]: value
-        }
-      }))
+          [field]: value,
+        },
+      }));
     }
   };
 
@@ -113,94 +119,98 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
   // },[])
 
   const data = useWallet();
-  console.log(data)
+  const {account, signAndSubmitTransaction} = data;
+  console.log(data);
   const connectWallet = async () => {
     try {
-      setLoading(true)
-      if(data.connected){
+      setLoading(true);
+      if (data.connected) {
         setUserData((prev) => ({
-          ...prev, modelData: {
-            ...prev.modelData, wolleteAddr: data.account.address
-          }
-        }))
-  
-        if(userData.role == "INVESTOR"){
-          await signUpInvestor(data.account.address)
-        }
-        else {
-          await signUpSeller()
-        }
+          ...prev,
+          modelData: {
+            ...prev.modelData,
+            wolleteAddr: data.account.address,
+          },
+        }));
 
+        if (userData.role == "INVESTOR") {
+          await signUpInvestor(data.account.address);
+        } else {
+          await signUpSeller();
+        }
+      } else {
+        setIsSnackbarOpen(() => ({
+          color: "danger",
+          message: "Please Create a Web3 Wollete First",
+        }));
+        setLoading(false);
       }
-      else{
-        setIsSnackbarOpen(() => ({ color: "danger", message: "Please Create a Web3 Wollete First" }))
-        setLoading(false)
-      }
-
     } catch (error) {
-      console.log(error)
-      setIsSnackbarOpen(() => ({ color: "danger", message: "Error" }))
-      setLoading(false)
+      console.log(error);
+      setIsSnackbarOpen(() => ({ color: "danger", message: "Error" }));
+      setLoading(false);
     }
-  }
-
+  };
 
   const signUpInvestor = async (walletAddr) => {
-    console.log("Wollete Address:", walletAddr)
+    console.log("Wollete Address:", walletAddr);
     try {
-      const res = await axios.post(`${BACKEND_URL}/auth/signup/investor`,
+      const res = await axios.post(
+        `${BACKEND_URL}/auth/signup/investor`,
         { wolleteAddr: walletAddr },
         { withCredentials: true }
-      )
+      );
       if (res.data.message) {
-        setIsSnackbarOpen(() => ({ color: "success", message: res.data.message }))
+        setIsSnackbarOpen(() => ({
+          color: "success",
+          message: res.data.message,
+        }));
 
-        const result = res.data.result
-        localStorage.setItem("WOLLETEADDR", result.wolleteAddr)
-        localStorage.setItem("ROLE", result.role)
-        
-        router.push('/login')
-      }
-      else if (res.data.error) {
-        console.log(res.data.error)
-        setIsSnackbarOpen(() => ({ color: "danger", message: res.data.error }))
-        setLoading(false)
+        const result = res.data.result;
+        localStorage.setItem("WOLLETEADDR", result.wolleteAddr);
+        localStorage.setItem("ROLE", result.role);
+
+        router.push("/login");
+      } else if (res.data.error) {
+        console.log(res.data.error);
+        setIsSnackbarOpen(() => ({ color: "danger", message: res.data.error }));
+        setLoading(false);
       }
     } catch (error) {
-      setLoading(false)
-      console.log("Error In Axios")
+      setLoading(false);
+      console.log("Error In Axios");
     }
-
-  }
+  };
 
   const signUpSeller = async () => {
-
     try {
-      const res = await axios.post(`${BACKEND_URL}/auth/signup/seller`,
+      const res = await axios.post(
+        `${BACKEND_URL}/auth/signup/seller`,
         { ...userData.modelData },
         { withCredentials: true }
-      )
+      );
       if (res.data.message) {
-        setIsSnackbarOpen(() => ({ color: "success", message: res.data.message }))
-        const result = res.data.result
-        localStorage.setItem("WOLLETEADDR", result.wolleteAddr)
-        localStorage.setItem("EMAIL", result.email)
-        localStorage.setItem("ROLE", result.role)
-        localStorage.setItem("SELLER_ID", result.sellerId)
+        setIsSnackbarOpen(() => ({
+          color: "success",
+          message: res.data.message,
+        }));
+        const result = res.data.result;
+        localStorage.setItem("WOLLETEADDR", result.wolleteAddr);
+        localStorage.setItem("EMAIL", result.email);
+        localStorage.setItem("ROLE", result.role);
+        localStorage.setItem("SELLER_ID", result.sellerId);
 
-        router.push('/login')
-      }
-      else if (res.data.error) {
-        console.log(res.data.error)
-        setIsSnackbarOpen(() => ({ color: "danger", message: res.data.error }))
-        setLoading(false)
+        router.push("/login");
+      } else if (res.data.error) {
+        console.log(res.data.error);
+        setIsSnackbarOpen(() => ({ color: "danger", message: res.data.error }));
+        setLoading(false);
       }
     } catch (error) {
-      setLoading(false)
-      console.log("Error In Axios")
+      setLoading(false);
+      console.log("Error In Axios");
     }
-
-  }
+  };
 
   return (
     <div className="sm:w-96">
@@ -226,18 +236,47 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
             <p className="text-gray-700 text-2xl mx-auto">Investor SignUp</p>
           </div>
           <div className="flex flex-col gap-4 pt-4 ">
-            <Image src={MetaMaskWolf} alt="metaMaskLogo" className="w-24 mx-auto" />
-            <p className="text-black">
-              Connect your Wollete to Get Started🔥 {" "}
-            </p>
+            <Image
+              src={MetaMaskWolf}
+              alt="metaMaskLogo"
+              className="w-24 mx-auto"
+            />
+            <p className="text-black">Connect your Wollete to Get Started🔥 </p>
             <form className="flex flex-col">
               <WalletSelector />
-              <ColorLoadingButton loadingPosition="end" loading={loading} onClick={() => { connectWallet() }} className="capitalize !px-4 text-lg !font-mono !font-light">Proceed</ColorLoadingButton>
+              <ColorLoadingButton
+                loadingPosition="end"
+                loading={loading}
+                onClick={() => {
+                  connectWallet();
+                }}
+                className="capitalize !px-4 text-lg !font-mono !font-light"
+              >
+                Proceed
+              </ColorLoadingButton>
             </form>
           </div>
           <div className="mt-10">
-            <p>Have an account already? Click Here to <Link className="text-blue-500 hover:underline" href={"/login"}>login</Link></p>
+            <p>
+              Have an account already? Click Here to{" "}
+              <Link className="text-blue-500 hover:underline" href={"/login"}>
+                login
+              </Link>
+            </p>
           </div>
+          <button
+            onClick={async () => {
+              await createInvestment(
+                account,
+                signAndSubmitTransaction,
+                1,
+                "fc44bce5f55130388251c8b4a11cc4cabfc5573268d2945ebdc9301040c0beb9",
+                100
+              );
+            }}
+          >
+            Create Investment
+          </button>
         </motion.div>
       )}
 
@@ -272,7 +311,9 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
                 size="small"
                 required
                 className="w-full xs:w-auto"
-                onChange={(e) => { handler(e) }}
+                onChange={(e) => {
+                  handler(e);
+                }}
               />
             </div>
             <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between">
@@ -284,7 +325,9 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
                 size="small"
                 required
                 className="w-full xs:w-auto"
-                onChange={(e) => { handler(e) }}
+                onChange={(e) => {
+                  handler(e);
+                }}
               />
             </div>
             <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between">
@@ -296,7 +339,9 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
                 size="small"
                 required
                 className="w-full xs:w-auto"
-                onChange={(e) => { handler(e) }}
+                onChange={(e) => {
+                  handler(e);
+                }}
               />
             </div>
             <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between">
@@ -309,11 +354,19 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
                 size="small"
                 required
                 className="w-full xs:w-auto"
-                onChange={(e) => { handler(e) }}
+                onChange={(e) => {
+                  handler(e);
+                }}
               />
             </div>
 
-            <ColorButton type="submit" variant="contained" onClick={(e) => handleSellerPageNo(1)}>Next</ColorButton>
+            <ColorButton
+              type="submit"
+              variant="contained"
+              onClick={(e) => handleSellerPageNo(1)}
+            >
+              Next
+            </ColorButton>
           </form>
         </motion.div>
       )}
@@ -349,7 +402,9 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
                 size="small"
                 required
                 className="w-full xs:w-auto"
-                onChange={(e) => { handler(e) }}
+                onChange={(e) => {
+                  handler(e);
+                }}
               />
             </div>
             <div className="flex flex-wrap   xs:flex-col gap-4 justify-between">
@@ -360,12 +415,32 @@ const FormSignUp = ({ setIsSnackbarOpen, userData, setUserData, view, setView })
 
               <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between">
                 <label htmlFor="metaMaskId">Connect metamask</label>
-                <LoadingButton variant="outlined" loadingPosition="end" loading={loading} onClick={() => { connectWallet() }} className="capitalize !px-4 text-lg !font-mono !font-light">Connect Web3</LoadingButton>
+                <LoadingButton
+                  variant="outlined"
+                  loadingPosition="end"
+                  loading={loading}
+                  onClick={() => {
+                    connectWallet();
+                  }}
+                  className="capitalize !px-4 text-lg !font-mono !font-light"
+                >
+                  Connect Web3
+                </LoadingButton>
               </div>
-
             </div>
 
-            <ColorLoadingButton loading={loading} variant="contained" type="submit" onClick={(e) => { e.preventDefault(); signUpSeller() }}> Submit</ColorLoadingButton>
+            <ColorLoadingButton
+              loading={loading}
+              variant="contained"
+              type="submit"
+              onClick={(e) => {
+                e.preventDefault();
+                signUpSeller();
+              }}
+            >
+              {" "}
+              Submit
+            </ColorLoadingButton>
           </form>
         </motion.div>
       )}

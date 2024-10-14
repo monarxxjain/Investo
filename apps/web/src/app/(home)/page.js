@@ -7,8 +7,7 @@ import Features from "@/components/molecules/homePage/Features";
 import Overview from "@/components/molecules/homePage/Overview";
 import Stats from "@/components/molecules/homePage/Stats";
 import FAQ from "@/components/molecules/homePage/FAQ";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { ConnectAptos } from "@/utils/aptos/try";
+// import { useWallet } from "@aptos-labs/wallet-adapter-react";
 
 export default function Home() {
 
@@ -140,8 +139,8 @@ export default function Home() {
     
 
   }
-  const {account, signAndSubmitTransaction} = useWallet();
-    console.log(account)
+  // const {account, signAndSubmitTransaction} = useWallet();
+    // console.log(account)
 
   return (
     <div>
@@ -155,7 +154,7 @@ export default function Home() {
       <Overview setCursorVariant={setCursorVariant} />
       <Stats setCursorVariant={setCursorVariant} />
       <FAQ setCursorVariant={setCursorVariant} />
-      <button onClick={()=>ConnectAptos()}>Fuck me</button>
+      
     </div>
   );
 }
